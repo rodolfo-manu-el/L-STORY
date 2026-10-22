@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -32,6 +33,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -216,12 +218,12 @@ fun GoogleSignInButton(
         ),
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(52.dp)
             .testTag("google_sign_in_button")
     ) {
         if (isLoading) {
             CircularProgressIndicator(
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(22.dp),
                 color = MaterialTheme.colorScheme.onPrimary,
                 strokeWidth = 2.dp
             )
@@ -231,10 +233,10 @@ fun GoogleSignInButton(
                 contentDescription = "Google Sign-In",
                 modifier = Modifier.size(20.dp)
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(10.dp))
             Text(
-                text = "Sign in with Google · Entrar al Estudio",
-                style = MaterialTheme.typography.titleMedium,
+                text = "Sign in with Google · Sincronizar en la Nube",
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -243,7 +245,8 @@ fun GoogleSignInButton(
 
 @Composable
 fun AuthScreen(
-    onAuthSuccess: () -> Unit
+    onAuthSuccess: () -> Unit,
+    onContinueWithoutLogin: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -289,11 +292,11 @@ fun AuthScreen(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
+                        .height(190.dp)
                         .clip(RoundedCornerShape(24.dp))
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Surface(
                     color = MaterialTheme.colorScheme.secondaryContainer,
@@ -307,7 +310,7 @@ fun AuthScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
                     text = "StoryBuilder",
@@ -316,16 +319,16 @@ fun AuthScreen(
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "De la hoja en blanco a tu primer libro. Diseñado para autores sin experiencia previa con estructura guiada, fichas visuales, editor Zen y asistencia IA.",
+                    text = "De la hoja en blanco a tu primer libro. Explora el estudio directamente o inicia sesión con Google para guardar tu progreso en la nube.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Card(
                     colors = CardDefaults.cardColors(
@@ -335,8 +338,8 @@ fun AuthScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
-                        modifier = Modifier.padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                        modifier = Modifier.padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         AuthFeatureRow(
                             icon = Icons.Default.AutoAwesome,
@@ -356,7 +359,26 @@ fun AuthScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
+
+                OutlinedButton(
+                    onClick = onContinueWithoutLogin,
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .testTag("continue_guest_button")
+                ) {
+                    Icon(Icons.Default.Explore, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Explorar Estudio Ahora (Sin iniciar sesión)",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 GoogleSignInButton(
                     onAuthSuccess = onAuthSuccess,

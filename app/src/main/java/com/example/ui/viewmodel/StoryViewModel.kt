@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 sealed interface UiState<out T> {
     data object Loading : UiState<Nothing>
@@ -41,13 +42,182 @@ sealed interface UiState<out T> {
 class StoryViewModel(
     private val repository: StoryRepository,
     private val currentUserId: String,
-    private val userDisplayName: String
+    private val userDisplayName: String,
+    val isGuestMode: Boolean = false
 ) : ViewModel() {
 
-    private val _selectedProjectId = MutableStateFlow<String?>(null)
+    // --- Estado en Memoria para Modo Estudio Local (Sin Login obligatorio) ---
+    private val defaultDemoProjectId = "demo_project_1"
+
+    private val _localProfile = MutableStateFlow(
+        UserProfile(
+            id = currentUserId,
+            userId = currentUserId,
+            displayName = userDisplayName,
+            dailyWordGoal = 500L,
+            currentStreak = 3L,
+            todayWords = 185L,
+            completedLessonsCount = 1L
+        )
+    )
+
+    private val _localProjects = MutableStateFlow(
+        listOf(
+            StoryProject(
+                id = defaultDemoProjectId,
+                userId = currentUserId,
+                title = "El Cartógrafo de Ceniza",
+                genre = "Fantasía",
+                premise = "En un mundo donde los mapas antiguos alteran el territorio, Lyra Vance busca encontrar la ciudad borrada antes del solsticio mientras oculta que fue ella quien quemó el archivo real.",
+                structureTemplate = "THREE_ACTS",
+                protagonistName = "Lyra Vance",
+                protagonistSecret = "Fue ella quien quemó el archivo real por accidente",
+                centralConflict = "El Inquisidor del Reloj persigue a todos los cartógrafos",
+                targetWordCount = 45000L,
+                currentWordCount = 185L,
+                isSharedBeta = true
+            )
+        )
+    )
+
+    private val _localCharacters = MutableStateFlow(
+        listOf(
+            StoryCharacter(
+                id = "demo_char_1",
+                userId = currentUserId,
+                projectId = defaultDemoProjectId,
+                name = "Lyra Vance",
+                role = "PROTAGONISTA",
+                motivation = "Encontrar la ciudad borrada del mapa antes del solsticio",
+                fear = "Que su secreto destruya a los últimos cartógrafos libres",
+                secret = "Fue ella quien quemó el archivo real por accidente",
+                appearance = "Dedos manchados de tinta dorada y brújula de cobre sin aguja",
+                evolutionArc = "Pasa de huir de su culpa a liderar la reconstrucción del atlas vivo"
+            ),
+            StoryCharacter(
+                id = "demo_char_2",
+                userId = currentUserId,
+                projectId = defaultDemoProjectId,
+                name = "Inquisidor Vane",
+                role = "ANTAGONISTA",
+                motivation = "Congelar las fronteras del imperio destruyendo los mapas antiguos",
+                fear = "El regreso del caos que arrasó su provincia natal",
+                secret = "Utiliza en secreto una hoja arrancada del atlas prohibido",
+                appearance = "Capa de terciopelo gris ceniza y reloj de bolsillo que late al revés",
+                evolutionArc = "Su obsesión por el orden lo lleva a cruzar el umbral prohibido"
+            )
+        )
+    )
+
+    private val _localChapters = MutableStateFlow(
+        listOf(
+            StoryChapter(
+                id = "demo_chap_1",
+                userId = currentUserId,
+                projectId = defaultDemoProjectId,
+                chapterNumber = 1L,
+                actLabel = "Acto I · El Mundo Ordinario",
+                title = "El Umbral de Lyra Vance",
+                synopsis = "Presenta a Lyra en el taller cartográfico y el hallazgo del mapa que sangra tinta.",
+                content = buildString {
+                    appendLine("# Capítulo 1: El Umbral de Lyra Vance")
+                    appendLine()
+                    appendLine("El reloj de la torre dio las trece campanadas, y Lyra supo que tenía exactamente cuatro minutos antes de que su nombre apareciera en la lista negra del Inquisidor.")
+                    appendLine()
+                    appendLine("Sobre la mesa de roble, el pergamino del norte había empezado a entibiarse. Donde antes figuraba un desierto vacío, una línea de tinta dorada dibujaba ahora las murallas de una ciudad que nadie recordaba.")
+                    appendLine()
+                    appendLine("—Si damos un paso más hacia esa frontera, no habrá retorno —murmuró cerrando el estuche de latón.")
+                },
+                wordCount = 86L,
+                status = "EN_REVISION"
+            ),
+            StoryChapter(
+                id = "demo_chap_2",
+                userId = currentUserId,
+                projectId = defaultDemoProjectId,
+                chapterNumber = 2L,
+                actLabel = "Acto I · El Incidente Incitador",
+                title = "La Llave del Archivo Quemado",
+                synopsis = "Un mensajero nocturno entrega un sello que Lyra creía destruido en el incendio.",
+                content = "La lluvia golpeaba los cristales emplomados cuando llamaron tres veces con el código antiguo de los aprendices.",
+                wordCount = 17L,
+                status = "BORRADOR"
+            ),
+            StoryChapter(
+                id = "demo_chap_3",
+                userId = currentUserId,
+                projectId = defaultDemoProjectId,
+                chapterNumber = 3L,
+                actLabel = "Acto II · El Punto Medio",
+                title = "La Ciudad que No Existe",
+                synopsis = "El secreto de Lyra corre peligro cuando el mapa exige un recuerdo verdadero para abrir el paso.",
+                content = "",
+                wordCount = 0L,
+                status = "BORRADOR"
+            )
+        )
+    )
+
+    private val _localTimeline = MutableStateFlow(
+        listOf(
+            TimelineEvent(
+                id = "demo_ev_1",
+                userId = currentUserId,
+                projectId = defaultDemoProjectId,
+                sequenceOrder = 1L,
+                title = "Las Trece Campanadas en el Taller",
+                timeLabel = "Día 1 · Medianoche",
+                location = "Taller de Cartografía Real",
+                povCharacter = "Lyra Vance",
+                tensionLevel = 7L,
+                notes = "El pergamino revela la primera coordenada de la ciudad borrada."
+            ),
+            TimelineEvent(
+                id = "demo_ev_2",
+                userId = currentUserId,
+                projectId = defaultDemoProjectId,
+                sequenceOrder = 2L,
+                title = "Emboscada en el Puente de Niebla",
+                timeLabel = "Día 2 · Amanecer",
+                location = "Puente de Hierro",
+                povCharacter = "Lyra Vance",
+                tensionLevel = 9L,
+                notes = "Primer cara a cara con los emisarios del Inquisidor Vane."
+            )
+        )
+    )
+
+    private val _localLessons = MutableStateFlow(
+        listOf(
+            LessonProgress(
+                id = "demo_lesson_1",
+                userId = currentUserId,
+                lessonCode = "HOOKS_101",
+                completed = true,
+                practiceNote = "El reloj de la torre dio las trece campanadas..."
+            )
+        )
+    )
+
+    private val _localBetaComments = MutableStateFlow(
+        listOf(
+            BetaComment(
+                id = "demo_comment_1",
+                userId = currentUserId,
+                projectId = defaultDemoProjectId,
+                chapterTitle = "Capítulo 1",
+                reviewerName = "Sofía (Lectora Beta)",
+                paragraphExcerpt = "«El reloj de la torre dio las trece campanadas...»",
+                commentText = "¡Excelente gancho inicial! La anomalía de las trece campanadas atrapa desde la primera línea.",
+                rating = 5L
+            )
+        )
+    )
+
+    private val _selectedProjectId = MutableStateFlow<String?>(if (isGuestMode) defaultDemoProjectId else null)
     val selectedProjectId: StateFlow<String?> = _selectedProjectId.asStateFlow()
 
-    private val _selectedChapterId = MutableStateFlow<String?>(null)
+    private val _selectedChapterId = MutableStateFlow<String?>(if (isGuestMode) "demo_chap_1" else null)
     val selectedChapterId: StateFlow<String?> = _selectedChapterId.asStateFlow()
 
     private val _statusBanner = MutableStateFlow<String?>(null)
@@ -74,7 +244,9 @@ class StoryViewModel(
     private val _lastExportResult = MutableStateFlow<ExportResult?>(null)
     val lastExportResult: StateFlow<ExportResult?> = _lastExportResult.asStateFlow()
 
-    val userProfileState: StateFlow<UiState<UserProfile?>> = repository.observeUserProfile(currentUserId)
+    val userProfileState: StateFlow<UiState<UserProfile?>> = (
+        if (isGuestMode) _localProfile else repository.observeUserProfile(currentUserId)
+    )
         .map<UserProfile?, UiState<UserProfile?>> { UiState.Success(it) }
         .catch { e ->
             Log.w(TAG, "Error observing profile", e)
@@ -86,7 +258,9 @@ class StoryViewModel(
             initialValue = UiState.Loading
         )
 
-    val projectsState: StateFlow<UiState<List<StoryProject>>> = repository.observeProjects(currentUserId)
+    val projectsState: StateFlow<UiState<List<StoryProject>>> = (
+        if (isGuestMode) _localProjects else repository.observeProjects(currentUserId)
+    )
         .map<List<StoryProject>, UiState<List<StoryProject>>> { list ->
             if (_selectedProjectId.value == null && list.isNotEmpty()) {
                 _selectedProjectId.value = list.first().id
@@ -106,6 +280,7 @@ class StoryViewModel(
     val charactersState: StateFlow<UiState<List<StoryCharacter>>> = _selectedProjectId
         .flatMapLatest { projId ->
             if (projId == null) flowOf(emptyList())
+            else if (isGuestMode) _localCharacters.map { list -> list.filter { it.projectId == projId } }
             else repository.observeCharacters(projId, currentUserId)
         }
         .map<List<StoryCharacter>, UiState<List<StoryCharacter>>> { UiState.Success(it) }
@@ -122,6 +297,9 @@ class StoryViewModel(
     val chaptersState: StateFlow<UiState<List<StoryChapter>>> = _selectedProjectId
         .flatMapLatest { projId ->
             if (projId == null) flowOf(emptyList())
+            else if (isGuestMode) _localChapters.map { list ->
+                list.filter { it.projectId == projId }.sortedBy { it.chapterNumber }
+            }
             else repository.observeChapters(projId, currentUserId)
         }
         .map<List<StoryChapter>, UiState<List<StoryChapter>>> { list ->
@@ -143,6 +321,9 @@ class StoryViewModel(
     val timelineState: StateFlow<UiState<List<TimelineEvent>>> = _selectedProjectId
         .flatMapLatest { projId ->
             if (projId == null) flowOf(emptyList())
+            else if (isGuestMode) _localTimeline.map { list ->
+                list.filter { it.projectId == projId }.sortedBy { it.sequenceOrder }
+            }
             else repository.observeTimelineEvents(projId, currentUserId)
         }
         .map<List<TimelineEvent>, UiState<List<TimelineEvent>>> { UiState.Success(it) }
@@ -156,7 +337,9 @@ class StoryViewModel(
             initialValue = UiState.Loading
         )
 
-    val lessonProgressState: StateFlow<UiState<List<LessonProgress>>> = repository.observeLessonProgress(currentUserId)
+    val lessonProgressState: StateFlow<UiState<List<LessonProgress>>> = (
+        if (isGuestMode) _localLessons else repository.observeLessonProgress(currentUserId)
+    )
         .map<List<LessonProgress>, UiState<List<LessonProgress>>> { UiState.Success(it) }
         .catch { e ->
             Log.w(TAG, "Error observing lessons", e)
@@ -171,6 +354,7 @@ class StoryViewModel(
     val betaCommentsState: StateFlow<UiState<List<BetaComment>>> = _selectedProjectId
         .flatMapLatest { projId ->
             if (projId == null) flowOf(emptyList())
+            else if (isGuestMode) _localBetaComments.map { list -> list.filter { it.projectId == projId } }
             else repository.observeBetaComments(projId, currentUserId)
         }
         .map<List<BetaComment>, UiState<List<BetaComment>>> { UiState.Success(it) }
@@ -185,8 +369,10 @@ class StoryViewModel(
         )
 
     init {
-        viewModelScope.launch {
-            repository.ensureUserProfile(userDisplayName)
+        if (!isGuestMode) {
+            viewModelScope.launch {
+                repository.ensureUserProfile(userDisplayName)
+            }
         }
     }
 
@@ -203,10 +389,6 @@ class StoryViewModel(
         _selectedChapterId.value = chapterId
     }
 
-    /**
-     * Story Wizard (Módulo 1): Crea el proyecto completo + Ficha del Protagonista +
-     * Escaleta de Capítulos según la plantilla elegida + Hitos iniciales de Cronología.
-     */
     fun launchGuidedStoryWizard(
         title: String,
         genre: String,
@@ -217,8 +399,103 @@ class StoryViewModel(
         structureTemplate: String,
         targetWordCount: Long = 45000L
     ) {
+        val premise = "En un mundo de $genre, $protagonistName busca $protagonistMotivation mientras oculta que $protagonistSecret, enfrentándose a $centralConflict."
+        val template = NarrativeCatalog.structureTemplates.find { it.key == structureTemplate }
+            ?: NarrativeCatalog.structureTemplates.first()
+
+        val firstChapterContent = buildString {
+            appendLine("# Capítulo 1: El Umbral de $protagonistName")
+            appendLine()
+            appendLine("Nadie en aquel lugar sospechaba que $protagonistName guardaba un secreto capaz de cambiarlo todo: $protagonistSecret.")
+            appendLine()
+            appendLine("Su único objetivo era claro: $protagonistMotivation. Sin embargo, la sombra de $centralConflict ya había comenzado a cerrarse sobre su camino.")
+            appendLine()
+            appendLine("—Si damos un paso más, no habrá retorno —murmuró mirando el horizonte.")
+        }
+        val initialWords = StoryRepository.countWords(firstChapterContent).toLong()
+
+        if (isGuestMode) {
+            val newProjectId = "local_proj_${UUID.randomUUID().toString().take(8)}"
+            val newProj = StoryProject(
+                id = newProjectId,
+                userId = currentUserId,
+                title = title.ifBlank { "Mi Primera Novela" },
+                genre = genre,
+                premise = premise,
+                structureTemplate = structureTemplate,
+                protagonistName = protagonistName,
+                protagonistSecret = protagonistSecret,
+                centralConflict = centralConflict,
+                targetWordCount = targetWordCount,
+                currentWordCount = initialWords,
+                isSharedBeta = false
+            )
+            _localProjects.value = listOf(newProj) + _localProjects.value
+            _selectedProjectId.value = newProjectId
+
+            val newChar = StoryCharacter(
+                id = "local_char_${UUID.randomUUID().toString().take(8)}",
+                userId = currentUserId,
+                projectId = newProjectId,
+                name = protagonistName,
+                role = "PROTAGONISTA",
+                motivation = protagonistMotivation,
+                fear = "Que su secreto ($protagonistSecret) destruya aquello que intenta salvar.",
+                secret = protagonistSecret,
+                appearance = "Rasgos marcados por la experiencia; porta un objeto ligado a su pasado.",
+                evolutionArc = "Pasa de huir de su secreto a aceptarlo para superar $centralConflict."
+            )
+            _localCharacters.value = _localCharacters.value + newChar
+
+            val newChapters = template.defaultBeats.mapIndexed { index, (actTitle, beatSynopsis) ->
+                StoryChapter(
+                    id = "local_chap_${newProjectId}_${index + 1}",
+                    userId = currentUserId,
+                    projectId = newProjectId,
+                    chapterNumber = (index + 1).toLong(),
+                    actLabel = actTitle,
+                    title = if (index == 0) "El Umbral de $protagonistName" else actTitle.substringAfter("·").trim(),
+                    synopsis = beatSynopsis,
+                    content = if (index == 0) firstChapterContent else "",
+                    wordCount = if (index == 0) initialWords else 0L,
+                    status = if (index == 0) "EN_REVISION" else "BORRADOR"
+                )
+            }
+            _localChapters.value = _localChapters.value + newChapters
+            _selectedChapterId.value = newChapters.first().id
+
+            val newEvents = listOf(
+                TimelineEvent(
+                    id = "local_ev_${UUID.randomUUID().toString().take(8)}",
+                    userId = currentUserId,
+                    projectId = newProjectId,
+                    sequenceOrder = 1L,
+                    title = "Incidente Incitador: $centralConflict",
+                    timeLabel = "Día 1 · Amanecer",
+                    location = "Escenario de apertura",
+                    povCharacter = protagonistName,
+                    tensionLevel = 6L,
+                    notes = "El secreto de $protagonistName corre peligro por primera vez."
+                ),
+                TimelineEvent(
+                    id = "local_ev_${UUID.randomUUID().toString().take(8)}",
+                    userId = currentUserId,
+                    projectId = newProjectId,
+                    sequenceOrder = 2L,
+                    title = "Punto de No Retorno",
+                    timeLabel = "Día 3 · Medianoche",
+                    location = "Frontera del conflicto",
+                    povCharacter = protagonistName,
+                    tensionLevel = 8L,
+                    notes = "Revelación parcial de: $protagonistSecret."
+                )
+            )
+            _localTimeline.value = _localTimeline.value + newEvents
+            _statusBanner.value = "¡Proyecto \"$title\" creado en Modo Estudio Local! Inicia sesión cuando quieras sincronizarlo en la nube."
+            return
+        }
+
         viewModelScope.launch {
-            val premise = "En un mundo de $genre, $protagonistName busca $protagonistMotivation mientras oculta que $protagonistSecret, enfrentándose a $centralConflict."
             val projectResult = repository.createProject(
                 title = title,
                 genre = genre,
@@ -232,7 +509,6 @@ class StoryViewModel(
             projectResult.onSuccess { projectId ->
                 _selectedProjectId.value = projectId
 
-                // 1. Crear Ficha del Protagonista (Bible Card)
                 repository.createCharacter(
                     projectId = projectId,
                     name = protagonistName,
@@ -243,20 +519,6 @@ class StoryViewModel(
                     appearance = "Rasgos marcados por la experiencia; porta un objeto ligado a su pasado.",
                     evolutionArc = "Pasa de huir de su secreto a aceptarlo para superar $centralConflict."
                 )
-
-                // 2. Crear Capítulos iniciales basados en la plantilla seleccionada
-                val template = NarrativeCatalog.structureTemplates.find { it.key == structureTemplate }
-                    ?: NarrativeCatalog.structureTemplates.first()
-
-                val firstChapterContent = buildString {
-                    appendLine("# Capítulo 1: El Umbral de $protagonistName")
-                    appendLine()
-                    appendLine("Nadie en aquel lugar sospechaba que $protagonistName guardaba un secreto capaz de cambiarlo todo: $protagonistSecret.")
-                    appendLine()
-                    appendLine("Su único objetivo era claro: $protagonistMotivation. Sin embargo, la sombra de $centralConflict ya había comenzado a cerrarse sobre su camino.")
-                    appendLine()
-                    appendLine("—Si damos un paso más, no habrá retorno —murmuró mirando el horizonte.")
-                }
 
                 template.defaultBeats.forEachIndexed { index, (actTitle, beatSynopsis) ->
                     val chNum = (index + 1).toLong()
@@ -271,7 +533,6 @@ class StoryViewModel(
                     )
                 }
 
-                // 3. Crear Eventos iniciales en la Cronología Visual
                 repository.createTimelineEvent(
                     projectId = projectId,
                     sequenceOrder = 1L,
@@ -293,7 +554,6 @@ class StoryViewModel(
                     notes = "Revelación parcial de: $protagonistSecret."
                 )
 
-                val initialWords = StoryRepository.countWords(firstChapterContent).toLong()
                 repository.updateProjectWordCountAndBeta(projectId, initialWords, false)
                 _statusBanner.value = "¡Proyecto \"$title\" estructurado con éxito! Tu primer capítulo ya está listo en el Editor Zen."
             }.onFailure { err ->
@@ -312,6 +572,23 @@ class StoryViewModel(
         evolutionArc: String
     ) {
         val projId = _selectedProjectId.value ?: return
+        if (isGuestMode) {
+            val newChar = StoryCharacter(
+                id = "local_char_${UUID.randomUUID().toString().take(8)}",
+                userId = currentUserId,
+                projectId = projId,
+                name = name,
+                role = role,
+                motivation = motivation,
+                fear = fear,
+                secret = secret,
+                appearance = appearance,
+                evolutionArc = evolutionArc
+            )
+            _localCharacters.value = _localCharacters.value + newChar
+            _statusBanner.value = "Ficha de \"$name\" añadida a la Biblia de la Historia."
+            return
+        }
         viewModelScope.launch {
             repository.createCharacter(
                 projectId = projId,
@@ -329,6 +606,10 @@ class StoryViewModel(
     }
 
     fun removeCharacter(characterId: String) {
+        if (isGuestMode) {
+            _localCharacters.value = _localCharacters.value.filterNot { it.id == characterId }
+            return
+        }
         viewModelScope.launch {
             repository.deleteCharacter(characterId)
         }
@@ -344,6 +625,23 @@ class StoryViewModel(
         notes: String
     ) {
         val projId = _selectedProjectId.value ?: return
+        if (isGuestMode) {
+            val newEv = TimelineEvent(
+                id = "local_ev_${UUID.randomUUID().toString().take(8)}",
+                userId = currentUserId,
+                projectId = projId,
+                sequenceOrder = sequenceOrder,
+                title = title,
+                timeLabel = timeLabel,
+                location = location,
+                povCharacter = povCharacter,
+                tensionLevel = tensionLevel,
+                notes = notes
+            )
+            _localTimeline.value = _localTimeline.value + newEv
+            _statusBanner.value = "Evento \"$title\" añadido a la Cronología Visual."
+            return
+        }
         viewModelScope.launch {
             repository.createTimelineEvent(
                 projectId = projId,
@@ -361,6 +659,10 @@ class StoryViewModel(
     }
 
     fun removeTimelineEvent(eventId: String) {
+        if (isGuestMode) {
+            _localTimeline.value = _localTimeline.value.filterNot { it.id == eventId }
+            return
+        }
         viewModelScope.launch {
             repository.deleteTimelineEvent(eventId)
         }
@@ -370,6 +672,25 @@ class StoryViewModel(
         val projId = _selectedProjectId.value ?: return
         val existingChapters = (chaptersState.value as? UiState.Success)?.data.orEmpty()
         val nextNumber = (existingChapters.maxOfOrNull { it.chapterNumber } ?: 0L) + 1L
+        if (isGuestMode) {
+            val newId = "local_chap_${UUID.randomUUID().toString().take(8)}"
+            val newCh = StoryChapter(
+                id = newId,
+                userId = currentUserId,
+                projectId = projId,
+                chapterNumber = nextNumber,
+                actLabel = actLabel,
+                title = title,
+                synopsis = synopsis,
+                content = "",
+                wordCount = 0L,
+                status = "BORRADOR"
+            )
+            _localChapters.value = _localChapters.value + newCh
+            _selectedChapterId.value = newId
+            _statusBanner.value = "Capítulo $nextNumber creado."
+            return
+        }
         viewModelScope.launch {
             repository.createChapter(
                 projectId = projId,
@@ -394,6 +715,30 @@ class StoryViewModel(
         newStatus: String
     ) {
         val projId = _selectedProjectId.value ?: return
+        if (isGuestMode) {
+            val updatedWords = StoryRepository.countWords(newContent).toLong()
+            _localChapters.value = _localChapters.value.map {
+                if (it.id == chapter.id) {
+                    it.copy(
+                        title = newTitle,
+                        synopsis = newSynopsis,
+                        content = newContent,
+                        wordCount = updatedWords,
+                        status = newStatus
+                    )
+                } else it
+            }
+            val totalWords = _localChapters.value.filter { it.projectId == projId }.sumOf { it.wordCount }
+            _localProjects.value = _localProjects.value.map {
+                if (it.id == projId) it.copy(currentWordCount = totalWords) else it
+            }
+            val delta = (updatedWords - chapter.wordCount).coerceAtLeast(10L)
+            _localProfile.value = _localProfile.value.copy(
+                todayWords = _localProfile.value.todayWords + delta
+            )
+            _statusBanner.value = "Guardado en Modo Local · $updatedWords palabras (Inicia sesión para respaldar en la nube)."
+            return
+        }
         viewModelScope.launch {
             repository.updateChapterContent(
                 chapterId = chapter.id,
@@ -425,21 +770,6 @@ class StoryViewModel(
             }
         }
     }
-
-    fun updateDailyGoal(newGoal: Long) {
-        val profile = (userProfileState.value as? UiState.Success)?.data
-        viewModelScope.launch {
-            repository.updateWritingGoalAndProgress(
-                dailyWordGoal = newGoal,
-                todayWords = profile?.todayWords ?: 0L,
-                currentStreak = profile?.currentStreak ?: 1L,
-                completedLessonsCount = profile?.completedLessonsCount ?: 0L
-            )
-            _statusBanner.value = "Meta diaria actualizada a $newGoal palabras."
-        }
-    }
-
-    // --- IA & CO-PILOTO NARRATIVO ---
 
     fun generatePromptStudioIdeas(genre: String, seed: String) {
         viewModelScope.launch {
@@ -481,9 +811,21 @@ class StoryViewModel(
         }
     }
 
-    // --- MICRO-APRENDIZAJE, BETA SOCIAL Y EXPORTACIÓN ---
-
     fun completeMicroLesson(lessonCode: String, practiceNote: String) {
+        if (isGuestMode) {
+            val updated = _localLessons.value.filterNot { it.lessonCode == lessonCode } +
+                LessonProgress(
+                    id = "local_lesson_$lessonCode",
+                    userId = currentUserId,
+                    lessonCode = lessonCode,
+                    completed = true,
+                    practiceNote = practiceNote
+                )
+            _localLessons.value = updated
+            _localProfile.value = _localProfile.value.copy(completedLessonsCount = updated.size.toLong())
+            _statusBanner.value = "¡Píldora narrativa completada!"
+            return
+        }
         viewModelScope.launch {
             repository.saveLessonPractice(
                 lessonCode = lessonCode,
@@ -506,6 +848,17 @@ class StoryViewModel(
 
     fun toggleSocialBetaShare(enabled: Boolean) {
         val projId = _selectedProjectId.value ?: return
+        if (isGuestMode) {
+            _localProjects.value = _localProjects.value.map {
+                if (it.id == projId) it.copy(isSharedBeta = enabled) else it
+            }
+            _statusBanner.value = if (enabled) {
+                "Enlace de Lector Beta Social activado."
+            } else {
+                "Borrador cambiado a modo privado."
+            }
+            return
+        }
         val currentProj = (projectsState.value as? UiState.Success)?.data?.find { it.id == projId } ?: return
         viewModelScope.launch {
             repository.updateProjectWordCountAndBeta(
@@ -529,6 +882,21 @@ class StoryViewModel(
         rating: Long
     ) {
         val projId = _selectedProjectId.value ?: return
+        if (isGuestMode) {
+            val newComm = BetaComment(
+                id = "local_comm_${UUID.randomUUID().toString().take(8)}",
+                userId = currentUserId,
+                projectId = projId,
+                chapterTitle = chapterTitle,
+                reviewerName = reviewerName,
+                paragraphExcerpt = excerpt,
+                commentText = commentText,
+                rating = rating
+            )
+            _localBetaComments.value = listOf(newComm) + _localBetaComments.value
+            _statusBanner.value = "Nota al margen de $reviewerName añadida al capítulo."
+            return
+        }
         viewModelScope.launch {
             repository.addBetaComment(
                 projectId = projId,

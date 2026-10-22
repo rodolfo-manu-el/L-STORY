@@ -49,6 +49,66 @@ jobs:
         with:
           gradle-version: wrapper
 
+      - name: Ensure google-services.json and firebase_applet_config.xml exist for CI
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            echo "$GOOGLE_SERVICES_JSON" > app/google-services.json
+          elif [ ! -f app/google-services.json ]; then
+            cat << 'EOF' > app/google-services.json
+          {
+            "project_info": {
+              "project_number": "641117341651",
+              "project_id": "gen-lang-client-0924132478",
+              "storage_bucket": "gen-lang-client-0924132478.firebasestorage.app"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:641117341651:android:800548ceadd7f4f13f9126",
+                  "android_client_info": {
+                    "package_name": "com.aistudio.storybuilder.nvxkrp"
+                  }
+                },
+                "oauth_client": [
+                  {
+                    "client_id": "641117341651-vse9vo3isa16dcud0ukkfgq1q6k7i5cn.apps.googleusercontent.com",
+                    "client_type": 3
+                  }
+                ],
+                "api_key": [
+                  {
+                    "current_key": "AIzaSyA4KnaiHZ056Fjnhtk5t5LWaXDpB9KAyKA"
+                  }
+                ],
+                "services": {
+                  "appinvite_service": {
+                    "other_platform_oauth_client": [
+                      {
+                        "client_id": "641117341651-vse9vo3isa16dcud0ukkfgq1q6k7i5cn.apps.googleusercontent.com",
+                        "client_type": 3
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
+          fi
+
+          if [ ! -f app/src/main/res/values/firebase_applet_config.xml ]; then
+            mkdir -p app/src/main/res/values
+            cat << 'EOF' > app/src/main/res/values/firebase_applet_config.xml
+          <?xml version="1.0" encoding="utf-8" standalone="no"?>
+          <resources>
+              <string name="firestore_database_id" translatable="false">ai-studio-android-storybui-8b57d392-f6e6-4e0f-9f9b-92dd0d3d2998</string>
+          </resources>
+          EOF
+          fi
+
       - name: Prepare debug.keystore for signing
         run: |
           if [ ! -f debug.keystore ]; then

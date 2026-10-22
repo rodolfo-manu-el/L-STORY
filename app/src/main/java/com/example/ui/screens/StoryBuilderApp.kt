@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -10,18 +11,23 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.AutoFixHigh
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +44,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -58,6 +65,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.R
 import com.example.data.repository.StoryRepository
+import com.example.ui.auth.GoogleSignInButton
 import com.example.ui.auth.signOut
 import com.example.ui.viewmodel.StoryViewModel
 import com.example.ui.viewmodel.UiState
@@ -76,14 +84,18 @@ private data class NavDest(
 fun StoryBuilderApp(
     currentUserId: String,
     userDisplayName: String,
+    isGuestMode: Boolean = false,
+    onAuthSuccess: () -> Unit = {},
     onSignedOut: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val credentialManager = remember(context) { CredentialManager.create(context) }
+    var showCloudSyncDialog by remember { mutableStateOf(false) }
+    var authErrorText by remember { mutableStateOf<String?>(null) }
 
     val viewModel: StoryViewModel = viewModel(
-        key = currentUserId,
+        key = "${currentUserId}_$isGuestMode",
         factory = viewModelFactory {
             initializer {
                 val app = checkNotNull(this[APPLICATION_KEY]) {
@@ -94,7 +106,8 @@ fun StoryBuilderApp(
                 StoryViewModel(
                     repository = StoryRepository(db, FirebaseAuth.getInstance()),
                     currentUserId = currentUserId,
-                    userDisplayName = userDisplayName
+                    userDisplayName = userDisplayName,
+                    isGuestMode = isGuestMode
                 )
             }
         }
@@ -148,6 +161,40 @@ fun StoryBuilderApp(
         )
     }
 
+    if (showCloudSyncDialog) {
+        AlertDialog(
+            onDismissRequest = { showCloudSyncDialog = false },
+            title = { Text("Guardar Progreso en la Nube") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "Actualmente estás usando StoryBuilder en Modo Estudio Local. Inicia sesión con Google para respaldar tus novelas, fichas de personajes y capítulos en Cloud Firestore.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    GoogleSignInButton(
+                        onAuthSuccess = {
+                            showCloudSyncDialog = false
+                            onAuthSuccess()
+                        },
+                        onAuthError = { authErrorText = it }
+                    )
+                    if (authErrorText != null) {
+                        Text(
+                            text = authErrorText ?: "",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showCloudSyncDialog = false }) {
+                    Text("Seguir en Modo Local")
+                }
+            }
+        )
+    }
+
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val isExpandedScreen = maxWidth >= 700.dp
 
@@ -164,10 +211,12 @@ fun StoryBuilderApp(
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                text = if (activeProject != null) {
-                                    "${activeProject.genre} · ${activeProject.currentWordCount}/${activeProject.targetWordCount} palabras"
+                                text = if (isGuestMode) {
+                                    "Modo Estudio Local · ${activeProject?.currentWordCount ?: 0L} palabras"
+                                } else if (activeProject != null) {
+                                    "Nube Activa · ${activeProject.genre} · ${activeProject.currentWordCount} palabras"
                                 } else {
-                                    "Autor: $userDisplayName · Co-Piloto Guiado"
+                                    "Autor: $userDisplayName · Nube Activa"
                                 },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -175,21 +224,38 @@ fun StoryBuilderApp(
                         }
                     },
                     actions = {
-                        IconButton(
-                            onClick = {
-                                signOut(
-                                    context = context,
-                                    credentialManager = credentialManager,
-                                    onSignOutComplete = onSignedOut,
-                                    scope = scope
+                        if (isGuestMode) {
+                            FilledTonalButton(
+                                onClick = { showCloudSyncDialog = true },
+                                modifier = Modifier
+                                    .padding(end = 8.dp)
+                                    .testTag("open_cloud_login_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CloudUpload,
+                                    contentDescription = "Guardar progreso con Google",
+                                    modifier = Modifier.size(18.dp)
                                 )
-                            },
-                            modifier = Modifier.testTag("sign_out_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Logout,
-                                contentDescription = "Cerrar sesión"
-                            )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Guardar Progreso")
+                            }
+                        } else {
+                            IconButton(
+                                onClick = {
+                                    signOut(
+                                        context = context,
+                                        credentialManager = credentialManager,
+                                        onSignOutComplete = onSignedOut,
+                                        scope = scope
+                                    )
+                                },
+                                modifier = Modifier.testTag("sign_out_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Logout,
+                                    contentDescription = "Cerrar sesión"
+                                )
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
