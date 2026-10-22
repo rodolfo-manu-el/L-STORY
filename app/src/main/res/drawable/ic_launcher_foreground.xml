@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Open Storybook Base -->
+    <path
+        android:fillColor="#FAF4E8"
+        android:pathData="M28,44 C38,41 48,43 54,48 C60,43 70,41 80,44 L80,74 C70,71 60,73 54,78 C48,73 38,71 28,74 Z" />
+    <!-- Golden Spine & Fountain Pen Nib -->
+    <path
+        android:fillColor="#E6B35A"
+        android:pathData="M54,24 L64,44 L58,56 L50,56 L44,44 Z" />
+    <!-- Pen Slit & Breathing Hole -->
+    <path
+        android:fillColor="#19162B"
+        android:pathData="M53,28 L55,28 L55,42 L53,42 Z M54,44 m-2.5,0 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0" />
+    <!-- Constellation Spark -->
+    <path
+        android:fillColor="#F5D38C"
+        android:pathData="M72,26 L74,31 L79,33 L74,35 L72,40 L70,35 L65,33 L70,31 Z" />
+</vector>

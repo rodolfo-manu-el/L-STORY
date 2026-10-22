@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="640dp"
+    android:height="360dp"
+    android:viewportWidth="640"
+    android:viewportHeight="360">
+    <!-- Deep Literary Night Background -->
+    <path android:pathData="M0,0h640v360h-640z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="640"
+                android:endY="360"
+                android:type="linear">
+                <item android:color="#151324" android:offset="0.0" />
+                <item android:color="#27203F" android:offset="0.55" />
+                <item android:color="#3A2842" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Warm Golden Ambient Glow -->
+    <path
+        android:fillColor="#22E6B35A"
+        android:pathData="M320,220 m-190,0 a190,190 0 1,0 380,0 a190,190 0 1,0 -380,0" />
+    <path
+        android:fillColor="#33F5C76B"
+        android:pathData="M320,220 m-120,0 a120,120 0 1,0 240,0 a120,120 0 1,0 -240,0" />
+    <!-- Narrative Arc Constellation Lines -->
+    <path
+        android:strokeColor="#88E6B35A"
+        android:strokeWidth="2.5"
+        android:pathData="M140,180 Q230,80 320,130 T500,90" />
+    <path
+        android:strokeColor="#55FAF4E8"
+        android:strokeWidth="1.5"
+        android:pathData="M180,210 Q320,50 470,170" />
+    <!-- Constellation Nodes (3 Acts) -->
+    <path
+        android:fillColor="#F5C76B"
+        android:pathData="M140,180 m-6,0 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0" />
+    <path
+        android:fillColor="#FAF4E8"
+        android:pathData="M245,108 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0" />
+    <path
+        android:fillColor="#E6B35A"
+        android:pathData="M320,130 m-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0" />
+    <path
+        android:fillColor="#FAF4E8"
+        android:pathData="M415,128 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0" />
+    <path
+        android:fillColor="#F5C76B"
+        android:pathData="M500,90 m-8,0 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0" />
+    <!-- Open Manuscript Book -->
+    <path
+        android:fillColor="#D9C7A7"
+        android:pathData="M190,235 C235,220 285,225 320,245 C355,225 405,220 450,235 L460,305 C410,290 360,295 320,315 C280,295 230,290 180,305 Z" />
+    <path
+        android:fillColor="#FAF4E8"
+        android:pathData="M196,227 C240,212 286,218 320,238 C354,218 400,212 444,227 L452,295 C405,280 356,286 320,306 C284,286 235,280 188,295 Z" />
+    <!-- Manuscript Text Lines -->
+    <path
+        android:strokeColor="#663E342B"
+        android:strokeWidth="2.5"
+        android:pathData="M215,248 L298,255 M212,262 L296,269 M210,276 L282,282 M342,255 L425,248 M344,269 L428,262 M346,282 L412,276" />
+    <!-- Golden Nib Centerpiece -->
+    <path
+        android:fillColor="#E6B35A"
+        android:pathData="M320,165 L336,200 L328,224 L312,224 L304,200 Z" />
+</vector>

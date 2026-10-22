@@ -1,0 +1,253 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100 &&
+             data.dailyWordGoal is int && data.dailyWordGoal >= 50 && data.dailyWordGoal <= 50000 &&
+             data.currentStreak is int && data.currentStreak >= 0 && data.currentStreak <= 10000 &&
+             data.todayWords is int && data.todayWords >= 0 && data.todayWords <= 200000 &&
+             data.completedLessonsCount is int && data.completedLessonsCount >= 0 && data.completedLessonsCount <= 1000 &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidStoryProject(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 150 &&
+             data.genre is string && data.genre.size() >= 1 && data.genre.size() <= 60 &&
+             data.premise is string && data.premise.size() >= 1 && data.premise.size() <= 2000 &&
+             data.structureTemplate is string && (data.structureTemplate == 'THREE_ACTS' || data.structureTemplate == 'HERO_JOURNEY' || data.structureTemplate == 'SNOWFLAKE') &&
+             data.protagonistName is string && data.protagonistName.size() >= 1 && data.protagonistName.size() <= 100 &&
+             data.protagonistSecret is string && data.protagonistSecret.size() >= 1 && data.protagonistSecret.size() <= 500 &&
+             data.centralConflict is string && data.centralConflict.size() >= 1 && data.centralConflict.size() <= 500 &&
+             data.targetWordCount is int && data.targetWordCount >= 500 && data.targetWordCount <= 500000 &&
+             data.currentWordCount is int && data.currentWordCount >= 0 && data.currentWordCount <= 1000000 &&
+             data.isSharedBeta is bool &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidStoryCharacter(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.projectId is string && isValidId(data.projectId) &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+             data.role is string && (data.role == 'PROTAGONISTA' || data.role == 'ANTAGONISTA' || data.role == 'MENTOR' || data.role == 'ALIADO' || data.role == 'MUNDO_LORE') &&
+             data.motivation is string && data.motivation.size() >= 1 && data.motivation.size() <= 600 &&
+             data.fear is string && data.fear.size() >= 1 && data.fear.size() <= 600 &&
+             data.secret is string && data.secret.size() >= 1 && data.secret.size() <= 600 &&
+             data.appearance is string && data.appearance.size() >= 1 && data.appearance.size() <= 600 &&
+             data.evolutionArc is string && data.evolutionArc.size() >= 1 && data.evolutionArc.size() <= 600 &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidStoryChapter(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.projectId is string && isValidId(data.projectId) &&
+             data.chapterNumber is int && data.chapterNumber >= 1 && data.chapterNumber <= 500 &&
+             data.actLabel is string && data.actLabel.size() >= 1 && data.actLabel.size() <= 100 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 150 &&
+             data.synopsis is string && data.synopsis.size() >= 1 && data.synopsis.size() <= 1000 &&
+             data.content is string && data.content.size() <= 100000 &&
+             data.wordCount is int && data.wordCount >= 0 && data.wordCount <= 100000 &&
+             data.status is string && (data.status == 'BORRADOR' || data.status == 'EN_REVISION' || data.status == 'FINALIZADO') &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidTimelineEvent(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.projectId is string && isValidId(data.projectId) &&
+             data.sequenceOrder is int && data.sequenceOrder >= 1 && data.sequenceOrder <= 1000 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 150 &&
+             data.timeLabel is string && data.timeLabel.size() >= 1 && data.timeLabel.size() <= 100 &&
+             data.location is string && data.location.size() >= 1 && data.location.size() <= 100 &&
+             data.povCharacter is string && data.povCharacter.size() >= 1 && data.povCharacter.size() <= 100 &&
+             data.tensionLevel is int && data.tensionLevel >= 1 && data.tensionLevel <= 10 &&
+             data.notes is string && data.notes.size() <= 1000 &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidLessonProgress(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.lessonCode is string && data.lessonCode.size() >= 1 && data.lessonCode.size() <= 80 &&
+             data.completed is bool &&
+             data.practiceNote is string && data.practiceNote.size() <= 2000 &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidBetaComment(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.projectId is string && isValidId(data.projectId) &&
+             data.chapterTitle is string && data.chapterTitle.size() >= 1 && data.chapterTitle.size() <= 150 &&
+             data.reviewerName is string && data.reviewerName.size() >= 1 && data.reviewerName.size() <= 100 &&
+             data.paragraphExcerpt is string && data.paragraphExcerpt.size() <= 500 &&
+             data.commentText is string && data.commentText.size() >= 1 && data.commentText.size() <= 1000 &&
+             data.rating is int && data.rating >= 1 && data.rating <= 5 &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() && isValidId(userId) && request.auth.uid == userId &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'dailyWordGoal', 'currentStreak', 'todayWords', 'completedLessonsCount', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'dailyWordGoal', 'currentStreak', 'todayWords', 'completedLessonsCount', 'createdAt', 'updatedAt']) &&
+                       incoming().createdAt <= request.time &&
+                       isValidUserProfile(incoming());
+
+      allow update: if isSignedIn() && isValidId(userId) && request.auth.uid == userId &&
+                       isValidUserProfile(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'dailyWordGoal', 'currentStreak', 'todayWords', 'completedLessonsCount', 'updatedAt']);
+
+      allow delete: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+    }
+
+    match /projects/{projectId} {
+      allow get: if isSignedIn() && isValidId(projectId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() && isValidId(projectId) &&
+                       incoming().keys().hasAll(['userId', 'title', 'genre', 'premise', 'structureTemplate', 'protagonistName', 'protagonistSecret', 'centralConflict', 'targetWordCount', 'currentWordCount', 'isSharedBeta', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'title', 'genre', 'premise', 'structureTemplate', 'protagonistName', 'protagonistSecret', 'centralConflict', 'targetWordCount', 'currentWordCount', 'isSharedBeta', 'createdAt', 'updatedAt']) &&
+                       incoming().createdAt <= request.time &&
+                       isValidStoryProject(incoming());
+
+      allow update: if isSignedIn() && isValidId(projectId) && existing().userId == request.auth.uid &&
+                       isValidStoryProject(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['title', 'genre', 'premise', 'structureTemplate', 'protagonistName', 'protagonistSecret', 'centralConflict', 'targetWordCount', 'currentWordCount', 'isSharedBeta', 'updatedAt']);
+
+      allow delete: if isSignedIn() && isValidId(projectId) && existing().userId == request.auth.uid;
+    }
+
+    match /characters/{characterId} {
+      allow get: if isSignedIn() && isValidId(characterId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() && isValidId(characterId) &&
+                       incoming().keys().hasAll(['userId', 'projectId', 'name', 'role', 'motivation', 'fear', 'secret', 'appearance', 'evolutionArc', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'projectId', 'name', 'role', 'motivation', 'fear', 'secret', 'appearance', 'evolutionArc', 'createdAt', 'updatedAt']) &&
+                       incoming().createdAt <= request.time &&
+                       isValidStoryCharacter(incoming());
+
+      allow update: if isSignedIn() && isValidId(characterId) && existing().userId == request.auth.uid &&
+                       isValidStoryCharacter(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().projectId == existing().projectId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['name', 'role', 'motivation', 'fear', 'secret', 'appearance', 'evolutionArc', 'updatedAt']);
+
+      allow delete: if isSignedIn() && isValidId(characterId) && existing().userId == request.auth.uid;
+    }
+
+    match /chapters/{chapterId} {
+      allow get: if isSignedIn() && isValidId(chapterId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() && isValidId(chapterId) &&
+                       incoming().keys().hasAll(['userId', 'projectId', 'chapterNumber', 'actLabel', 'title', 'synopsis', 'content', 'wordCount', 'status', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'projectId', 'chapterNumber', 'actLabel', 'title', 'synopsis', 'content', 'wordCount', 'status', 'createdAt', 'updatedAt']) &&
+                       incoming().createdAt <= request.time &&
+                       isValidStoryChapter(incoming());
+
+      allow update: if isSignedIn() && isValidId(chapterId) && existing().userId == request.auth.uid &&
+                       isValidStoryChapter(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().projectId == existing().projectId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['chapterNumber', 'actLabel', 'title', 'synopsis', 'content', 'wordCount', 'status', 'updatedAt']);
+
+      allow delete: if isSignedIn() && isValidId(chapterId) && existing().userId == request.auth.uid;
+    }
+
+    match /timeline_events/{eventId} {
+      allow get: if isSignedIn() && isValidId(eventId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() && isValidId(eventId) &&
+                       incoming().keys().hasAll(['userId', 'projectId', 'sequenceOrder', 'title', 'timeLabel', 'location', 'povCharacter', 'tensionLevel', 'notes', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'projectId', 'sequenceOrder', 'title', 'timeLabel', 'location', 'povCharacter', 'tensionLevel', 'notes', 'createdAt', 'updatedAt']) &&
+                       incoming().createdAt <= request.time &&
+                       isValidTimelineEvent(incoming());
+
+      allow update: if isSignedIn() && isValidId(eventId) && existing().userId == request.auth.uid &&
+                       isValidTimelineEvent(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().projectId == existing().projectId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['sequenceOrder', 'title', 'timeLabel', 'location', 'povCharacter', 'tensionLevel', 'notes', 'updatedAt']);
+
+      allow delete: if isSignedIn() && isValidId(eventId) && existing().userId == request.auth.uid;
+    }
+
+    match /lesson_progress/{progressId} {
+      allow get: if isSignedIn() && isValidId(progressId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() && isValidId(progressId) &&
+                       incoming().keys().hasAll(['userId', 'lessonCode', 'completed', 'practiceNote', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'lessonCode', 'completed', 'practiceNote', 'createdAt', 'updatedAt']) &&
+                       incoming().createdAt <= request.time &&
+                       isValidLessonProgress(incoming());
+
+      allow update: if isSignedIn() && isValidId(progressId) && existing().userId == request.auth.uid &&
+                       isValidLessonProgress(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().lessonCode == existing().lessonCode &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['completed', 'practiceNote', 'updatedAt']);
+
+      allow delete: if isSignedIn() && isValidId(progressId) && existing().userId == request.auth.uid;
+    }
+
+    match /beta_comments/{commentId} {
+      allow get: if isSignedIn() && isValidId(commentId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() && isValidId(commentId) &&
+                       incoming().keys().hasAll(['userId', 'projectId', 'chapterTitle', 'reviewerName', 'paragraphExcerpt', 'commentText', 'rating', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'projectId', 'chapterTitle', 'reviewerName', 'paragraphExcerpt', 'commentText', 'rating', 'createdAt', 'updatedAt']) &&
+                       incoming().createdAt <= request.time &&
+                       isValidBetaComment(incoming());
+
+      allow update: if isSignedIn() && isValidId(commentId) && existing().userId == request.auth.uid &&
+                       isValidBetaComment(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().projectId == existing().projectId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['chapterTitle', 'reviewerName', 'paragraphExcerpt', 'commentText', 'rating', 'updatedAt']);
+
+      allow delete: if isSignedIn() && isValidId(commentId) && existing().userId == request.auth.uid;
+    }
+  }
+}

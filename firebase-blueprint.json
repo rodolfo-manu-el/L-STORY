@@ -1,0 +1,175 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Perfil del autor y métricas de gamificación y hábitos de escritura",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Firebase Auth UID del usuario" },
+        "displayName": { "type": "string", "description": "Nombre de pluma o autor" },
+        "dailyWordGoal": { "type": "integer", "description": "Meta diaria de palabras" },
+        "currentStreak": { "type": "integer", "description": "Días consecutivos escribiendo" },
+        "todayWords": { "type": "integer", "description": "Palabras escritas hoy" },
+        "completedLessonsCount": { "type": "integer", "description": "Píldoras narrativas completadas" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp de creación" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp de actualización" }
+      },
+      "required": ["userId", "displayName", "dailyWordGoal", "currentStreak", "todayWords", "completedLessonsCount", "createdAt", "updatedAt"]
+    },
+    "StoryProject": {
+      "title": "StoryProject",
+      "description": "Proyecto de libro o novela creado mediante el Story Wizard",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID del propietario del proyecto" },
+        "title": { "type": "string", "description": "Título del libro o historia" },
+        "genre": { "type": "string", "description": "Género literario" },
+        "premise": { "type": "string", "description": "Sinopsis o premisa central" },
+        "structureTemplate": { "type": "string", "enum": ["THREE_ACTS", "HERO_JOURNEY", "SNOWFLAKE"], "description": "Plantilla estructural" },
+        "protagonistName": { "type": "string", "description": "Nombre del protagonista" },
+        "protagonistSecret": { "type": "string", "description": "Secreto del protagonista" },
+        "centralConflict": { "type": "string", "description": "Obstáculo principal" },
+        "targetWordCount": { "type": "integer", "description": "Objetivo total de palabras" },
+        "currentWordCount": { "type": "integer", "description": "Conteo actual de palabras" },
+        "isSharedBeta": { "type": "boolean", "description": "Si está compartido en el Lector Beta Social" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": [
+        "userId", "title", "genre", "premise", "structureTemplate",
+        "protagonistName", "protagonistSecret", "centralConflict",
+        "targetWordCount", "currentWordCount", "isSharedBeta", "createdAt", "updatedAt"
+      ]
+    },
+    "StoryCharacter": {
+      "title": "StoryCharacter",
+      "description": "Ficha de personaje o Lore (Bible Card)",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID del autor" },
+        "projectId": { "type": "string", "description": "ID del proyecto asociado" },
+        "name": { "type": "string", "description": "Nombre del personaje o elemento de lore" },
+        "role": { "type": "string", "enum": ["PROTAGONISTA", "ANTAGONISTA", "MENTOR", "ALIADO", "MUNDO_LORE"], "description": "Rol narrativo" },
+        "motivation": { "type": "string", "description": "Motivación principal" },
+        "fear": { "type": "string", "description": "Mayor miedo o debilidad" },
+        "secret": { "type": "string", "description": "Secreto oculto" },
+        "appearance": { "type": "string", "description": "Rasgos físicos o descripción visual" },
+        "evolutionArc": { "type": "string", "description": "Arco de transformación" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": [
+        "userId", "projectId", "name", "role", "motivation",
+        "fear", "secret", "appearance", "evolutionArc", "createdAt", "updatedAt"
+      ]
+    },
+    "StoryChapter": {
+      "title": "StoryChapter",
+      "description": "Capítulo o escena del manuscrito",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID del autor" },
+        "projectId": { "type": "string", "description": "ID del proyecto" },
+        "chapterNumber": { "type": "integer", "description": "Número de orden del capítulo" },
+        "actLabel": { "type": "string", "description": "Acto o fase estructural" },
+        "title": { "type": "string", "description": "Título del capítulo" },
+        "synopsis": { "type": "string", "description": "Escaleta o resumen del capítulo" },
+        "content": { "type": "string", "description": "Contenido en Markdown del capítulo" },
+        "wordCount": { "type": "integer", "description": "Palabras redactadas en el capítulo" },
+        "status": { "type": "string", "enum": ["BORRADOR", "EN_REVISION", "FINALIZADO"], "description": "Estado de redacción" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": [
+        "userId", "projectId", "chapterNumber", "actLabel", "title",
+        "synopsis", "content", "wordCount", "status", "createdAt", "updatedAt"
+      ]
+    },
+    "TimelineEvent": {
+      "title": "TimelineEvent",
+      "description": "Hito o evento en la cronología visual (Timeline)",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID del autor" },
+        "projectId": { "type": "string", "description": "ID del proyecto" },
+        "sequenceOrder": { "type": "integer", "description": "Orden cronológico" },
+        "title": { "type": "string", "description": "Título del evento" },
+        "timeLabel": { "type": "string", "description": "Momento temporal o fecha interna" },
+        "location": { "type": "string", "description": "Escenario o lugar" },
+        "povCharacter": { "type": "string", "description": "Personaje punto de vista (POV)" },
+        "tensionLevel": { "type": "integer", "description": "Nivel de tensión dramática (1 a 10)" },
+        "notes": { "type": "string", "description": "Notas de continuidad" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": [
+        "userId", "projectId", "sequenceOrder", "title", "timeLabel",
+        "location", "povCharacter", "tensionLevel", "notes", "createdAt", "updatedAt"
+      ]
+    },
+    "LessonProgress": {
+      "title": "LessonProgress",
+      "description": "Progreso del usuario en las Píldoras Narrativas (Micro-aprendizaje)",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID del autor" },
+        "lessonCode": { "type": "string", "description": "Identificador de la lección" },
+        "completed": { "type": "boolean", "description": "Si fue completada" },
+        "practiceNote": { "type": "string", "description": "Ejercicio práctico guardado por el usuario" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": ["userId", "lessonCode", "completed", "practiceNote", "createdAt", "updatedAt"]
+    },
+    "BetaComment": {
+      "title": "BetaComment",
+      "description": "Comentario o nota al margen en el Lector Beta Social",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID del autor propietario" },
+        "projectId": { "type": "string", "description": "ID del proyecto" },
+        "chapterTitle": { "type": "string", "description": "Capítulo comentado" },
+        "reviewerName": { "type": "string", "description": "Nombre del lector beta" },
+        "paragraphExcerpt": { "type": "string", "description": "Cita o fragmento señalado" },
+        "commentText": { "type": "string", "description": "Retroalimentación o nota al margen" },
+        "rating": { "type": "integer", "description": "Valoración de ritmo/impacto (1 a 5)" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": [
+        "userId", "projectId", "chapterTitle", "reviewerName",
+        "paragraphExcerpt", "commentText", "rating", "createdAt", "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Perfiles de autor y rachas de escritura por usuario"
+    },
+    "/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/StoryProject" },
+      "description": "Proyectos narrativos del usuario"
+    },
+    "/characters/{characterId}": {
+      "schema": { "$ref": "#/entities/StoryCharacter" },
+      "description": "Fichas de personajes y lore (Bible Cards)"
+    },
+    "/chapters/{chapterId}": {
+      "schema": { "$ref": "#/entities/StoryChapter" },
+      "description": "Capítulos y escenas redactadas en el Editor Zen"
+    },
+    "/timeline_events/{eventId}": {
+      "schema": { "$ref": "#/entities/TimelineEvent" },
+      "description": "Eventos de la cronología visual por proyecto"
+    },
+    "/lesson_progress/{progressId}": {
+      "schema": { "$ref": "#/entities/LessonProgress" },
+      "description": "Progreso de micro-lecciones narrativas"
+    },
+    "/beta_comments/{commentId}": {
+      "schema": { "$ref": "#/entities/BetaComment" },
+      "description": "Notas al margen y comentarios del Lector Beta Social"
+    }
+  }
+}

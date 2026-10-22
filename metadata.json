@@ -1,0 +1,6 @@
+{
+  "name": "StoryBuilder",
+  "description": "Estudio narrativo guiado y co-piloto literario con IA para escribir libros y novelas desde cero.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

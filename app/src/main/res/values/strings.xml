@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">StoryBuilder</string>
+    <string name="wizard_title">Story Wizard Guiado</string>
+    <string name="zen_editor_title">Editor Zen</string>
+    <string name="ai_copilot_title">Co-Piloto Narrativo IA</string>
+    <string name="academy_export_title">Academia y Exportador</string>
+</resources>
